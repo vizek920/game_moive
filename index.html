@@ -484,7 +484,7 @@
     grid-template-columns: repeat(5, 1fr);
     gap: 16px;
     width: 100%;
-    max-width: 900px;
+    max-width: 1000px;
   }
 
   .level-card {
@@ -504,6 +504,11 @@
   .level-card:nth-child(3) { animation-delay: 0.3s; }
   .level-card:nth-child(4) { animation-delay: 0.4s; }
   .level-card:nth-child(5) { animation-delay: 0.5s; }
+  .level-card:nth-child(6) { animation-delay: 0.6s; }
+  .level-card:nth-child(7) { animation-delay: 0.7s; }
+  .level-card:nth-child(8) { animation-delay: 0.8s; }
+  .level-card:nth-child(9) { animation-delay: 0.9s; }
+  .level-card:nth-child(10) { animation-delay: 1s; }
 
   .level-card.completed {
     border-color: rgba(39,174,96,0.5);
@@ -1243,25 +1248,25 @@
       <div class="category-card" onclick="openCategory(0)">
         <span class="category-icon">🎬</span>
         <div class="category-name">أفلام</div>
-        <div class="category-desc">خمن الفيلم من المقطع</div>
+        <div class="category-desc">10 أسئلة - خمن الفيلم</div>
         <span class="category-points-badge" id="cat-points-0">10 نقاط</span>
       </div>
       <div class="category-card" onclick="openCategory(1)">
         <span class="category-icon">⚽</span>
         <div class="category-name">الكورة</div>
-        <div class="category-desc">أسئلة كروية رهيبة</div>
+        <div class="category-desc">10 أسئلة كروية</div>
         <span class="category-points-badge" id="cat-points-1">15 نقاط</span>
       </div>
       <div class="category-card" onclick="openCategory(2)">
         <span class="category-icon">☀️</span>
         <div class="category-name">سولار</div>
-        <div class="category-desc">أسئلة من سولار</div>
+        <div class="category-desc">10 أسئلة من سولار</div>
         <span class="category-points-badge" id="cat-points-2">20 نقاط</span>
       </div>
       <div class="category-card" onclick="openCategory(3)">
         <span class="category-icon">😂</span>
         <div class="category-name">الميمز</div>
-        <div class="category-desc">تعرف على الميم؟</div>
+        <div class="category-desc">10 ميمز للتخمين</div>
         <span class="category-points-badge" id="cat-points-3">10 نقاط</span>
       </div>
     </div>
@@ -1281,10 +1286,10 @@
   <div class="page" id="questionPage">
     <div class="progress-section">
       <div class="progress-label">
-        <span id="progressText">المرحلة 1 من 5</span>
+        <span id="progressText">المرحلة 1 من 10</span>
         <span id="progressPts"></span>
       </div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:20%"></div></div>
+      <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
     </div>
 
     <div class="question-container">
@@ -1423,37 +1428,57 @@ const state = {
   ],
 
   questions: [
-    // Category 0: أفلام - 5 levels
+    // Category 0: أفلام - 10 levels
     [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
     ],
-    // Category 1: كورة
+    // Category 1: كورة - 10 levels
     [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
     ],
-    // Category 2: سولار
+    // Category 2: سولار - 10 levels
     [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
     ],
-    // Category 3: ميمز
+    // Category 3: ميمز - 10 levels
     [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
     ],
   ]
 };
@@ -1557,7 +1582,7 @@ function renderLevels() {
   const grid = document.getElementById('levelsGrid');
   const completed = state.completed[state.currentCat] || [];
   grid.innerHTML = '';
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 10; i++) {
     const div = document.createElement('div');
     div.className = 'level-card' + (completed.includes(i) ? ' completed' : '');
     div.innerHTML = `<div class="level-number">${i + 1}</div><div class="level-label">المرحلة</div>`;
@@ -1576,9 +1601,9 @@ function openQuestion(levelIdx) {
 
   document.getElementById('qCatBadge').textContent = cat.icon + ' ' + cat.name;
   document.getElementById('qLevelBadge').textContent = 'المرحلة ' + (levelIdx + 1);
-  document.getElementById('progressText').textContent = `المرحلة ${levelIdx+1} من 5`;
+  document.getElementById('progressText').textContent = `المرحلة ${levelIdx+1} من 10`;
   document.getElementById('progressPts').textContent = `${state.catPoints[state.currentCat]} نقطة`;
-  document.getElementById('progressFill').style.width = ((levelIdx + 1) / 5 * 100) + '%';
+  document.getElementById('progressFill').style.width = ((levelIdx + 1) / 10 * 100) + '%';
 
   // Reset UI
   state.selectedTeam = null;
@@ -1926,10 +1951,21 @@ function renderQuestionsEditor() {
     state.questions[ci].forEach((q, li) => {
       const qDiv = document.createElement('div');
       qDiv.className = 'question-editor';
+      
+      const hasVideo = q.video ? 'نعم ✅' : 'لا ❌';
+      
       qDiv.innerHTML = `
         <div class="question-editor-title">
           <span>المرحلة ${li + 1}</span>
+          <span style="font-size:0.8rem; color:rgba(255,255,255,0.4)">فيديو: ${hasVideo}</span>
         </div>
+        
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-size:0.85rem; color:rgba(255,255,255,0.5); margin-bottom:6px;">📹 رفع فيديو للمرحلة</label>
+          <input type="file" accept="video/*" id="video-${ci}-${li}" onchange="handleAdminVideoUpload(event, ${ci}, ${li})" style="width:100%; padding:8px; background:rgba(255,255,255,0.05); border:1px dashed rgba(245,200,66,0.3); border-radius:8px; color:rgba(255,255,255,0.7); font-size:0.85rem; cursor:pointer;" />
+          ${q.video ? `<div style="margin-top:6px; font-size:0.8rem; color:var(--correct);">✓ تم رفع الفيديو</div>` : ''}
+        </div>
+        
         <div class="options-editor">
           ${[0,1,2].map(oi => `
             <div class="option-input-wrap">
@@ -1943,6 +1979,7 @@ function renderQuestionsEditor() {
         </select>
         <div style="margin-top:10px">
           <button class="admin-btn save" onclick="saveQuestion(${ci},${li})">💾 حفظ المرحلة</button>
+          ${q.video ? `<button class="admin-btn reset" onclick="removeVideo(${ci},${li})" style="margin-right:8px;">🗑️ حذف الفيديو</button>` : ''}
         </div>
       `;
       section.appendChild(qDiv);
@@ -1959,6 +1996,32 @@ function saveQuestion(ci, li) {
   state.questions[ci][li].correct = parseInt(document.getElementById(`qcorrect-${ci}-${li}`).value);
   saveState();
   showToast(`✅ تم حفظ مرحلة ${li+1} من ${state.categories[ci].name}`);
+}
+
+function handleAdminVideoUpload(event, ci, li) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  const url = URL.createObjectURL(file);
+  state.questions[ci][li].video = url;
+  state.questions[ci][li].videoFile = file.name;
+  
+  showToast(`🎥 تم رفع الفيديو للمرحلة ${li+1}!`);
+  
+  // Re-render to update the UI
+  setTimeout(() => renderQuestionsEditor(), 300);
+}
+
+function removeVideo(ci, li) {
+  if (!confirm('هل أنت متأكد من حذف الفيديو؟')) return;
+  
+  state.questions[ci][li].video = null;
+  state.questions[ci][li].videoFile = null;
+  
+  showToast(`🗑️ تم حذف الفيديو من المرحلة ${li+1}`);
+  
+  // Re-render to update the UI
+  renderQuestionsEditor();
 }
 
 // Init

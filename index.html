@@ -1499,6 +1499,8 @@ function loadState() {
             if (state.questions[ci] && state.questions[ci][li]) {
               state.questions[ci][li].options = q.options || state.questions[ci][li].options;
               state.questions[ci][li].correct = q.correct !== undefined ? q.correct : state.questions[ci][li].correct;
+              state.questions[ci][li].video = q.video || state.questions[ci][li].video;
+              state.questions[ci][li].videoFile = q.videoFile || state.questions[ci][li].videoFile;
             }
           });
         });
@@ -1516,7 +1518,9 @@ function saveState() {
       catPoints: state.catPoints,
       questions: state.questions.map(cat => cat.map(q => ({
         options: q.options,
-        correct: q.correct
+        correct: q.correct,
+        video: q.video,
+        videoFile: q.videoFile
       })))
     };
     localStorage.setItem('ramadanQuizState', JSON.stringify(toSave));
@@ -1913,14 +1917,77 @@ function resetScore(team) {
 }
 
 function resetAll() {
+  if (!confirm('⚠️ هل أنت متأكد؟ سيتم حذف جميع النقاط والأسئلة والفيديوهات!')) return;
+  
+  // Reset scores and lives
   state.scores = { helal: 0, fawanees: 0 };
   state.lives = { helal: true, fawanees: true };
   state.completed = { 0: [], 1: [], 2: [], 3: [] };
+  
+  // Reset all questions and videos
+  state.questions = [
+    // Category 0: أفلام - 10 levels
+    [
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+    ],
+    // Category 1: كورة - 10 levels
+    [
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+    ],
+    // Category 2: سولار - 10 levels
+    [
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+    ],
+    // Category 3: ميمز - 10 levels
+    [
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
+    ],
+  ];
+  
+  // Update admin UI
   document.getElementById('admin-helal-score').value = 0;
   document.getElementById('admin-fawanees-score').value = 0;
+  
   updateScoreDisplay();
   saveState();
-  showToast('🔄 تم تصفير كل شيء!');
+  renderQuestionsEditor(); // Re-render to show cleared data
+  showToast('🔄 تم تصفير كل شيء بما في ذلك الأسئلة والفيديوهات!');
 }
 
 function resetLives() {
@@ -2006,6 +2073,7 @@ function handleAdminVideoUpload(event, ci, li) {
   state.questions[ci][li].video = url;
   state.questions[ci][li].videoFile = file.name;
   
+  saveState(); // Save to localStorage
   showToast(`🎥 تم رفع الفيديو للمرحلة ${li+1}!`);
   
   // Re-render to update the UI
@@ -2018,6 +2086,7 @@ function removeVideo(ci, li) {
   state.questions[ci][li].video = null;
   state.questions[ci][li].videoFile = null;
   
+  saveState(); // Save to localStorage
   showToast(`🗑️ تم حذف الفيديو من المرحلة ${li+1}`);
   
   // Re-render to update the UI

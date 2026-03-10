@@ -1811,11 +1811,21 @@ function nextLevel() {
 function handleVideoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
-  const url = URL.createObjectURL(file);
-  state.questions[state.currentCat][state.currentLevel].video = url;
-  const wrapper = document.getElementById('videoWrapper');
-  wrapper.innerHTML = `<video src="${url}" controls style="width:100%; border-radius:14px;"></video>`;
-  showToast('تم رفع الفيديو بنجاح! 🎥');
+  
+  // Convert to base64 for persistent storage
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Video = e.target.result;
+    state.questions[state.currentCat][state.currentLevel].video = base64Video;
+    state.questions[state.currentCat][state.currentLevel].videoFile = file.name;
+    
+    const wrapper = document.getElementById('videoWrapper');
+    wrapper.innerHTML = `<video src="${base64Video}" controls style="width:100%; border-radius:14px;"></video>`;
+    
+    saveState(); // Save to localStorage
+    showToast('تم حفظ الفيديو بنجاح! 🎥');
+  };
+  reader.readAsDataURL(file);
 }
 
 // ==============================
@@ -2069,15 +2079,20 @@ function handleAdminVideoUpload(event, ci, li) {
   const file = event.target.files[0];
   if (!file) return;
   
-  const url = URL.createObjectURL(file);
-  state.questions[ci][li].video = url;
-  state.questions[ci][li].videoFile = file.name;
-  
-  saveState(); // Save to localStorage
-  showToast(`🎥 تم رفع الفيديو للمرحلة ${li+1}!`);
-  
-  // Re-render to update the UI
-  setTimeout(() => renderQuestionsEditor(), 300);
+  // Convert file to base64 for persistent storage
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Video = e.target.result;
+    state.questions[ci][li].video = base64Video;
+    state.questions[ci][li].videoFile = file.name;
+    
+    saveState(); // Save to localStorage
+    showToast(`🎥 تم حفظ الفيديو للمرحلة ${li+1}!`);
+    
+    // Re-render to update the UI
+    setTimeout(() => renderQuestionsEditor(), 300);
+  };
+  reader.readAsDataURL(file);
 }
 
 function removeVideo(ci, li) {

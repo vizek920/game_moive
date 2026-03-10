@@ -583,7 +583,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 4px;
+    gap: 8px;
   }
 
   .timer-circle {
@@ -622,6 +622,34 @@
     right: 0;
     background: linear-gradient(180deg, rgba(245,200,66,0.2) 0%, rgba(245,200,66,0.1) 100%);
     transition: height 1s linear;
+  }
+
+  .start-timer-btn {
+    background: linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%);
+    border: none;
+    border-radius: 8px;
+    color: var(--deep-blue);
+    padding: 6px 16px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .start-timer-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(245,200,66,0.4);
+  }
+
+  .start-timer-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .start-timer-btn.running {
+    background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+    color: white;
   }
 
   .which-team-plays {
@@ -1303,6 +1331,7 @@
             <div class="timer-fill" id="timerFill" style="height:0%"></div>
             <div class="timer-number" id="timerNumber">15</div>
           </div>
+          <button class="start-timer-btn" id="startTimerBtn" onclick="toggleTimer()">▶️ ابدأ</button>
         </div>
       </div>
 
@@ -1414,6 +1443,7 @@ const state = {
   selectedTeam: null,
   timerInterval: null,
   timerLeft: 15,
+  timerRunning: false,
   scores: { helal: 0, fawanees: 0 },
   lives: { helal: true, fawanees: true },
   completed: { 0: [], 1: [], 2: [], 3: [] },
@@ -1611,6 +1641,8 @@ function openQuestion(levelIdx) {
 
   // Reset UI
   state.selectedTeam = null;
+  state.timerRunning = false;
+  state.timerLeft = 15;
   document.getElementById('btnHelal').classList.remove('selected');
   document.getElementById('btnFawanees').classList.remove('selected');
   document.getElementById('btnMarkCorrect').disabled = true;
@@ -1618,6 +1650,12 @@ function openQuestion(levelIdx) {
   document.getElementById('answeredOpen').style.display = 'none';
   document.getElementById('btnNext').style.display = 'none';
   document.getElementById('btnReveal').style.display = 'none';
+
+  // Reset timer button
+  const timerBtn = document.getElementById('startTimerBtn');
+  timerBtn.textContent = '▶️ ابدأ';
+  timerBtn.classList.remove('running');
+  timerBtn.disabled = false;
 
   // Score cards highlight
   document.getElementById('helaScoreCard').classList.remove('active-team');
@@ -1645,8 +1683,8 @@ function openQuestion(levelIdx) {
   // Life buttons
   updateLifeButtons();
 
-  // Start timer
-  startTimer();
+  // Reset timer display
+  updateTimerDisplay();
 
   showPage('questionPage');
 }
@@ -1679,6 +1717,12 @@ function selectOption(idx) {
   }
 
   clearTimer();
+  
+  // Disable timer button
+  const timerBtn = document.getElementById('startTimerBtn');
+  timerBtn.disabled = true;
+  timerBtn.textContent = '⏱️ تم الإجابة';
+  timerBtn.classList.remove('running');
 
   if (state.selectedTeam) {
     document.getElementById('btnMarkCorrect').disabled = false;
@@ -1701,8 +1745,25 @@ function selectTeam(team) {
 // ==============================
 // TIMER
 // ==============================
+function toggleTimer() {
+  const btn = document.getElementById('startTimerBtn');
+  
+  if (!state.timerRunning) {
+    // Start timer
+    state.timerRunning = true;
+    btn.textContent = '⏸️ إيقاف';
+    btn.classList.add('running');
+    startTimer();
+  } else {
+    // Stop timer
+    state.timerRunning = false;
+    btn.textContent = '▶️ متابعة';
+    btn.classList.remove('running');
+    clearTimer();
+  }
+}
+
 function startTimer() {
-  state.timerLeft = 15;
   updateTimerDisplay();
   clearTimer();
   state.timerInterval = setInterval(() => {
@@ -1724,7 +1785,11 @@ function updateTimerDisplay() {
 }
 
 function clearTimer() {
-  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+  if (state.timerInterval) { 
+    clearInterval(state.timerInterval); 
+    state.timerInterval = null; 
+  }
+  state.timerRunning = false;
 }
 
 function timeUp() {
@@ -1733,6 +1798,13 @@ function timeUp() {
   document.getElementById('btnMarkCorrect').disabled = true;
   document.getElementById('btnMarkWrong').disabled = true;
   document.getElementById('btnNext').style.display = 'inline-flex';
+  
+  // Disable timer button
+  const timerBtn = document.getElementById('startTimerBtn');
+  timerBtn.disabled = true;
+  timerBtn.textContent = '⏱️ انتهى';
+  timerBtn.classList.remove('running');
+  
   // Disable option buttons
   document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
 }
@@ -1781,8 +1853,15 @@ function useLife() {
   saveState();
   showToast(`❤️ تم استخدام الحياة الإضافية لفريق ${state.selectedTeam === 'helal' ? 'هلال' : 'الفوانيس'}`);
 
-  // Start timer again
-  startTimer();
+  // Reset timer
+  state.timerLeft = 15;
+  state.timerRunning = false;
+  updateTimerDisplay();
+  
+  const timerBtn = document.getElementById('startTimerBtn');
+  timerBtn.disabled = false;
+  timerBtn.textContent = '▶️ ابدأ';
+  timerBtn.classList.remove('running');
 }
 
 function updateLifeButtons() {

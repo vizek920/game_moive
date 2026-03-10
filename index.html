@@ -349,6 +349,7 @@
   .page-header {
     text-align: center;
     margin-bottom: 40px;
+    position: relative;
   }
 
   .page-header h1 {
@@ -362,6 +363,32 @@
   .page-header p {
     color: rgba(255,255,255,0.5);
     font-size: 1rem;
+  }
+
+  .admin-access-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(245,200,66,0.3);
+    color: var(--gold);
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .admin-access-btn:hover {
+    background: rgba(245,200,66,0.15);
+    border-color: var(--gold);
+    box-shadow: 0 0 15px rgba(245,200,66,0.2);
+    transform: translateY(-2px);
   }
 
   .categories-grid {
@@ -965,11 +992,19 @@
 
   /* ===== ADMIN PAGE ===== */
   #adminPage {
-    padding-top: 30px;
     align-items: stretch;
     max-width: 900px;
     margin: 0 auto;
     width: 100%;
+    padding-bottom: 30px;
+  }
+  
+  #adminPage.with-scorebar {
+    padding-top: 100px;
+  }
+  
+  #adminPage.without-scorebar {
+    padding-top: 30px;
   }
 
   .admin-header {
@@ -1166,6 +1201,18 @@
     .levels-grid { grid-template-columns: repeat(3, 1fr); }
     .options-grid { grid-template-columns: 1fr; }
     .login-card { padding: 30px 24px; }
+    
+    .admin-access-btn {
+      position: static;
+      margin: 16px auto 0;
+      display: inline-flex;
+    }
+    
+    .page-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   }
 
   .score-change {
@@ -1271,6 +1318,7 @@
     <div class="page-header">
       <h1>اختر الفئة 🎯</h1>
       <p>مرحباً <span id="playerNameDisplay"></span>! اختر فئة للبدء</p>
+      <button class="admin-access-btn" onclick="showAdminFromCategories()">⚙️ لوحة التحكم</button>
     </div>
     <div class="categories-grid">
       <div class="category-card" onclick="openCategory(0)">
@@ -1588,13 +1636,32 @@ function goBack() {
   if (active.id === 'levelsPage') showPage('categoriesPage');
   else if (active.id === 'questionPage') showPage('levelsPage');
   else if (active.id === 'adminPage') {
-    document.getElementById('scoreBar').classList.remove('visible');
-    showPage('loginPage');
+    // Check if we came from login or categories
+    if (document.getElementById('scoreBar').classList.contains('visible')) {
+      // Came from categories, go back to categories
+      showPage('categoriesPage');
+    } else {
+      // Came from login, hide score bar and go to login
+      document.getElementById('scoreBar').classList.remove('visible');
+      showPage('loginPage');
+    }
   }
 }
 
 function showAdmin() {
   document.getElementById('scoreBar').classList.remove('visible');
+  const adminPage = document.getElementById('adminPage');
+  adminPage.classList.remove('with-scorebar');
+  adminPage.classList.add('without-scorebar');
+  renderAdminScores();
+  renderQuestionsEditor();
+  showPage('adminPage');
+}
+
+function showAdminFromCategories() {
+  const adminPage = document.getElementById('adminPage');
+  adminPage.classList.remove('without-scorebar');
+  adminPage.classList.add('with-scorebar');
   renderAdminScores();
   renderQuestionsEditor();
   showPage('adminPage');

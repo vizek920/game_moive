@@ -1480,7 +1480,20 @@
 
 </div><!-- end main-content -->
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+// ==============================
+// SUPABASE CONFIGURATION
+// ==============================
+let sb; // Global Supabase client
+
+(function() {
+  const SUPABASE_URL = 'https://cpktqamgrcrhqohyguar.sb.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa3RxYW1ncmNyaHFvaHlndWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTQxMTMsImV4cCI6MjA4ODgzMDExM30.BHdxCiVIO6NS5VcsRUdm_rEijvbsAigYX7rChZHJ8ZA';
+  
+  sb = window.sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+})();
+
 // ==============================
 // STATE
 // ==============================
@@ -1561,53 +1574,235 @@ const state = {
   ]
 };
 
-// Load saved data from localStorage
-function loadState() {
+// ==============================
+// SUPABASE DATA FUNCTIONS
+// ==============================
+
+// Load game state from Supabase
+async function loadGameState() {
   try {
-    const saved = localStorage.getItem('ramadanQuizState');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      state.scores = parsed.scores || state.scores;
-      state.lives = parsed.lives || state.lives;
-      state.completed = parsed.completed || state.completed;
-      state.catPoints = parsed.catPoints || state.catPoints;
-      if (parsed.questions) {
-        parsed.questions.forEach((cat, ci) => {
-          cat.forEach((q, li) => {
-            if (state.questions[ci] && state.questions[ci][li]) {
-              state.questions[ci][li].options = q.options || state.questions[ci][li].options;
-              state.questions[ci][li].correct = q.correct !== undefined ? q.correct : state.questions[ci][li].correct;
-              state.questions[ci][li].video = q.video || state.questions[ci][li].video;
-              state.questions[ci][li].videoFile = q.videoFile || state.questions[ci][li].videoFile;
-            }
-          });
-        });
-      }
+    const { data, error } = await sb
+      .from('game_state')
+      .select('*')
+      .limit(1)
+      .single();
+    
+    if (error) throw error;
+    
+    if (data) {
+      state.scores.helal = data.helal_score;
+      state.scores.fawanees = data.fawanees_score;
+      state.lives.helal = data.helal_life;
+      state.lives.fawanees = data.fawanees_life;
     }
-  } catch(e) {}
+  } catch (error) {
+    console.error('Error loading game state:', error);
+  }
+}
+
+// Save game state to Supabase
+async function saveGameState() {
+  try {
+    const { error } = await sb
+      .from('game_state')
+      .update({
+        helal_score: state.scores.helal,
+        fawanees_score: state.scores.fawanees,
+        helal_life: state.lives.helal,
+        fawanees_life: state.lives.fawanees,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving game state:', error);
+  }
+}
+
+// Load category points from Supabase
+async function loadCategoryPoints() {
+  try {
+    const { data, error } = await sb
+      .from('category_points')
+      .select('*')
+      .order('id');
+    
+    if (error) throw error;
+    
+    if (data) {
+      data.forEach(cat => {
+        state.catPoints[cat.id] = cat.points;
+      });
+    }
+  } catch (error) {
+    console.error('Error loading category points:', error);
+  }
+}
+
+// Save category points to Supabase
+async function saveCategoryPoint(catId, points) {
+  try {
+    const { error } = await sb
+      .from('category_points')
+      .update({ points: points })
+      .eq('id', catId);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving category points:', error);
+  }
+}
+
+// Load questions from Supabase
+async function loadQuestions() {
+  try {
+    const { data, error } = await sb
+      .from('questions')
+      .select('*')
+      .order('category_id')
+      .order('level_id');
+    
+    if (error) throw error;
+    
+    if (data) {
+      data.forEach(q => {
+        if (!state.questions[q.category_id]) state.questions[q.category_id] = [];
+        state.questions[q.category_id][q.level_id] = {
+          options: [q.option_a, q.option_b, q.option_c],
+          correct: q.correct_answer,
+          video: q.video_url,
+          videoFile: null
+        };
+      });
+    }
+  } catch (error) {
+    console.error('Error loading questions:', error);
+  }
+}
+
+// Save question to Supabase
+async function saveQuestionToSupabase(catId, levelId) {
+  const q = state.questions[catId][levelId];
+  try {
+    const { error } = await sb
+      .from('questions')
+      .update({
+        option_a: q.options[0],
+        option_b: q.options[1],
+        option_c: q.options[2],
+        correct_answer: q.correct,
+        video_url: q.video
+      })
+      .eq('category_id', catId)
+      .eq('level_id', levelId);
+    
+    if (error) throw error;
+  } catch (error) {
+    console.error('Error saving question:', error);
+  }
+}
+
+// Load completed levels from Supabase
+async function loadCompletedLevels() {
+  try {
+    const { data, error } = await sb
+      .from('completed_levels')
+      .select('*');
+    
+    if (error) throw error;
+    
+    if (data) {
+      data.forEach(item => {
+        if (!state.completed[item.category_id]) state.completed[item.category_id] = [];
+        if (!state.completed[item.category_id].includes(item.level_id)) {
+          state.completed[item.category_id].push(item.level_id);
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Error loading completed levels:', error);
+  }
+}
+
+// Mark level as completed in Supabase
+async function markLevelCompleteSupabase(catId, levelId) {
+  try {
+    const { error } = await sb
+      .from('completed_levels')
+      .insert([{ category_id: catId, level_id: levelId }]);
+    
+    if (error && error.code !== '23505') throw error; // Ignore duplicate key error
+  } catch (error) {
+    console.error('Error marking level complete:', error);
+  }
+}
+
+// Subscribe to real-time updates
+function subscribeToRealtimeUpdates() {
+  // Subscribe to game_state changes
+  sb
+    .channel('game_state_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state' }, payload => {
+      if (payload.new) {
+        state.scores.helal = payload.new.helal_score;
+        state.scores.fawanees = payload.new.fawanees_score;
+        state.lives.helal = payload.new.helal_life;
+        state.lives.fawanees = payload.new.fawanees_life;
+        updateScoreDisplay();
+      }
+    })
+    .subscribe();
+
+  // Subscribe to category_points changes
+  sb
+    .channel('category_points_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'category_points' }, payload => {
+      if (payload.new) {
+        state.catPoints[payload.new.id] = payload.new.points;
+        updateScoreDisplay();
+      }
+    })
+    .subscribe();
+
+  // Subscribe to questions changes
+  sb
+    .channel('questions_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, async () => {
+      await loadQuestions();
+    })
+    .subscribe();
+
+  // Subscribe to completed_levels changes
+  sb
+    .channel('completed_levels_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'completed_levels' }, async () => {
+      await loadCompletedLevels();
+      if (document.getElementById('levelsPage').classList.contains('active')) {
+        renderLevels();
+      }
+    })
+    .subscribe();
+}
+
+// Load saved data from localStorage (legacy - removed)
+function loadState() {
+  // No longer needed - using Supabase
 }
 
 function saveState() {
-  try {
-    const toSave = {
-      scores: state.scores,
-      lives: state.lives,
-      completed: state.completed,
-      catPoints: state.catPoints,
-      questions: state.questions.map(cat => cat.map(q => ({
-        options: q.options,
-        correct: q.correct,
-        video: q.video,
-        videoFile: q.videoFile
-      })))
-    };
-    localStorage.setItem('ramadanQuizState', JSON.stringify(toSave));
-  } catch(e) {}
+  // No longer needed - using Supabase
 }
 
-loadState();
-
-// ==============================
+// Init - Load data from Supabase and subscribe to real-time updates
+(async function init() {
+  await loadGameState();
+  await loadCategoryPoints();
+  await loadQuestions();
+  await loadCompletedLevels();
+  updateScoreDisplay();
+  subscribeToRealtimeUpdates();
+})();
 // NAVIGATION
 // ==============================
 function showPage(id) {
@@ -1903,7 +2098,7 @@ function markAnswer(correct) {
   }
 
   updateScoreDisplay();
-  saveState();
+  saveGameState(); // Save to Supabase
 
   document.getElementById('btnMarkCorrect').disabled = true;
   document.getElementById('btnMarkWrong').disabled = true;
@@ -1917,7 +2112,7 @@ function useLife() {
   state.lives[state.selectedTeam] = false;
   updateScoreDisplay();
   updateLifeButtons();
-  saveState();
+  saveGameState(); // Save to Supabase
   showToast(`❤️ تم استخدام الحياة الإضافية لفريق ${state.selectedTeam === 'helal' ? 'هلال' : 'الفوانيس'}`);
 
   // Reset timer
@@ -1942,6 +2137,7 @@ function markLevelComplete() {
   if (!state.completed[cat]) state.completed[cat] = [];
   if (!state.completed[cat].includes(state.currentLevel)) {
     state.completed[cat].push(state.currentLevel);
+    markLevelCompleteSupabase(cat, state.currentLevel); // Save to Supabase
   }
 }
 
@@ -1960,7 +2156,7 @@ function handleVideoUpload(event) {
   
   // Convert to base64 for persistent storage
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     const base64Video = e.target.result;
     state.questions[state.currentCat][state.currentLevel].video = base64Video;
     state.questions[state.currentCat][state.currentLevel].videoFile = file.name;
@@ -1968,7 +2164,7 @@ function handleVideoUpload(event) {
     const wrapper = document.getElementById('videoWrapper');
     wrapper.innerHTML = `<video src="${base64Video}" controls style="width:100%; border-radius:14px;"></video>`;
     
-    saveState(); // Save to localStorage
+    await saveQuestionToSupabase(state.currentCat, state.currentLevel); // Save to Supabase
     showToast('تم حفظ الفيديو بنجاح! 🎥');
   };
   reader.readAsDataURL(file);
@@ -2060,7 +2256,7 @@ function adminSaveScore(team) {
   const val = parseInt(document.getElementById(`admin-${team}-score`).value) || 0;
   state.scores[team] = val;
   updateScoreDisplay();
-  saveState();
+  saveGameState(); // Save to Supabase
   showToast('✅ تم حفظ النقاط');
 }
 
@@ -2068,11 +2264,11 @@ function resetScore(team) {
   state.scores[team] = 0;
   document.getElementById(`admin-${team}-score`).value = 0;
   updateScoreDisplay();
-  saveState();
+  saveGameState(); // Save to Supabase
   showToast('تم تصفير ' + (team === 'helal' ? 'هلال' : 'الفوانيس'));
 }
 
-function resetAll() {
+async function resetAll() {
   if (!confirm('⚠️ هل أنت متأكد؟ سيتم حذف جميع النقاط والأسئلة والفيديوهات!')) return;
   
   // Reset scores and lives
@@ -2080,84 +2276,57 @@ function resetAll() {
   state.lives = { helal: true, fawanees: true };
   state.completed = { 0: [], 1: [], 2: [], 3: [] };
   
-  // Reset all questions and videos
-  state.questions = [
-    // Category 0: أفلام - 10 levels
-    [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-    ],
-    // Category 1: كورة - 10 levels
-    [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-    ],
-    // Category 2: سولار - 10 levels
-    [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-    ],
-    // Category 3: ميمز - 10 levels
-    [
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-      { options: ['خيار أ', 'خيار ب', 'خيار ج'], correct: 0, video: null, videoFile: null },
-    ],
-  ];
+  // Reset in Supabase
+  await saveGameState();
+  
+  // Clear completed levels
+  await sb.from('completed_levels').delete().neq('id', 0);
+  
+  // Reset questions in database
+  for (let cat = 0; cat < 4; cat++) {
+    for (let lvl = 0; lvl < 10; lvl++) {
+      await sb
+        .from('questions')
+        .update({
+          option_a: 'خيار أ',
+          option_b: 'خيار ب',
+          option_c: 'خيار ج',
+          correct_answer: 0,
+          video_url: null
+        })
+        .eq('category_id', cat)
+        .eq('level_id', lvl);
+      
+      state.questions[cat][lvl] = {
+        options: ['خيار أ', 'خيار ب', 'خيار ج'],
+        correct: 0,
+        video: null,
+        videoFile: null
+      };
+    }
+  }
   
   // Update admin UI
   document.getElementById('admin-helal-score').value = 0;
   document.getElementById('admin-fawanees-score').value = 0;
   
   updateScoreDisplay();
-  saveState();
-  renderQuestionsEditor(); // Re-render to show cleared data
+  renderQuestionsEditor();
   showToast('🔄 تم تصفير كل شيء بما في ذلك الأسئلة والفيديوهات!');
 }
 
 function resetLives() {
   state.lives = { helal: true, fawanees: true };
   updateScoreDisplay();
-  saveState();
+  saveGameState(); // Save to Supabase
   showToast('❤️ تم استعادة الحياة للفريقين!');
 }
 
-function saveCatPoints(idx) {
+async function saveCatPoints(idx) {
   const val = parseInt(document.getElementById(`admin-pts-${idx}`).value) || 0;
   state.catPoints[idx] = val;
+  await saveCategoryPoint(idx, val); // Save to Supabase
   updateScoreDisplay();
-  saveState();
   showToast('✅ تم حفظ نقاط ' + state.categories[idx].name);
 }
 
@@ -2212,27 +2381,27 @@ function renderQuestionsEditor() {
   });
 }
 
-function saveQuestion(ci, li) {
+async function saveQuestion(ci, li) {
   [0,1,2].forEach(oi => {
     state.questions[ci][li].options[oi] = document.getElementById(`qopt-${ci}-${li}-${oi}`).value;
   });
   state.questions[ci][li].correct = parseInt(document.getElementById(`qcorrect-${ci}-${li}`).value);
-  saveState();
+  await saveQuestionToSupabase(ci, li); // Save to Supabase
   showToast(`✅ تم حفظ مرحلة ${li+1} من ${state.categories[ci].name}`);
 }
 
-function handleAdminVideoUpload(event, ci, li) {
+async function handleAdminVideoUpload(event, ci, li) {
   const file = event.target.files[0];
   if (!file) return;
   
   // Convert file to base64 for persistent storage
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     const base64Video = e.target.result;
     state.questions[ci][li].video = base64Video;
     state.questions[ci][li].videoFile = file.name;
     
-    saveState(); // Save to localStorage
+    await saveQuestionToSupabase(ci, li); // Save to Supabase
     showToast(`🎥 تم حفظ الفيديو للمرحلة ${li+1}!`);
     
     // Re-render to update the UI
@@ -2241,13 +2410,13 @@ function handleAdminVideoUpload(event, ci, li) {
   reader.readAsDataURL(file);
 }
 
-function removeVideo(ci, li) {
+async function removeVideo(ci, li) {
   if (!confirm('هل أنت متأكد من حذف الفيديو؟')) return;
   
   state.questions[ci][li].video = null;
   state.questions[ci][li].videoFile = null;
   
-  saveState(); // Save to localStorage
+  await saveQuestionToSupabase(ci, li); // Save to Supabase
   showToast(`🗑️ تم حذف الفيديو من المرحلة ${li+1}`);
   
   // Re-render to update the UI

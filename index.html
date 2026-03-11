@@ -1487,12 +1487,21 @@
 // ==============================
 let sb; // Global Supabase client
 
-(function() {
-  const SUPABASE_URL = 'https://cpktqamgrcrhqohyguar.sb.co';
+window.addEventListener('DOMContentLoaded', function() {
+  const SUPABASE_URL = 'https://cpktqamgrcrhqohyguar.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa3RxYW1ncmNyaHFvaHlndWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTQxMTMsImV4cCI6MjA4ODgzMDExM30.BHdxCiVIO6NS5VcsRUdm_rEijvbsAigYX7rChZHJ8ZA';
   
-  sb = window.sb.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-})();
+  if (window.supabase && window.supabase.createClient) {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase connected successfully!');
+    
+    // Initialize app after Supabase is ready
+    initializeApp();
+  } else {
+    console.error('❌ Supabase library not loaded');
+    alert('خطأ في تحميل قاعدة البيانات. يرجى تحديث الصفحة.');
+  }
+});
 
 // ==============================
 // STATE
@@ -1795,14 +1804,14 @@ function saveState() {
 }
 
 // Init - Load data from Supabase and subscribe to real-time updates
-(async function init() {
+async function initializeApp() {
   await loadGameState();
   await loadCategoryPoints();
   await loadQuestions();
   await loadCompletedLevels();
   updateScoreDisplay();
   subscribeToRealtimeUpdates();
-})();
+}
 // NAVIGATION
 // ==============================
 function showPage(id) {

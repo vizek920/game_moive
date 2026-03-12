@@ -1483,6 +1483,44 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ==============================
+// CLOUDFLARE R2 CONFIGURATION
+// ==============================
+const R2_CONFIG = {
+  accountId: '2e9325081fb332fc6e2cd744e54555fe',
+  accessKeyId: 'b8cd48b70305cf275fd4afe30f0c6c88',
+  secretAccessKey: '1f7a56e9ac71eeb417ebe2e2b0098c9251a008973c947c6f4663bce598a01615',
+  bucketName: 'vizek',
+  publicUrl: 'https://pub-70895216041d4bd0852674a57a60144d.r2.dev'
+};
+
+// Upload video to R2
+async function uploadVideoToR2(file, categoryId, levelId) {
+  try {
+    const fileName = `video-${categoryId}-${levelId}-${Date.now()}.${file.name.split('.').pop()}`;
+    
+    // Create FormData
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // We'll use a simple approach: convert to base64 and store in Supabase for now
+    // For production R2 upload, you'd need a backend server
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const videoUrl = e.target.result;
+        resolve(videoUrl);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    
+  } catch (error) {
+    console.error('Error uploading to R2:', error);
+    throw error;
+  }
+}
+
+// ==============================
 // SUPABASE CONFIGURATION
 // ==============================
 let sb; // Global Supabase client
@@ -1706,9 +1744,14 @@ async function saveQuestionToSupabase(catId, levelId) {
       .eq('category_id', catId)
       .eq('level_id', levelId);
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ Error saving question:', error);
+      throw error;
+    }
+    console.log('✅ Question saved successfully!');
   } catch (error) {
-    console.error('Error saving question:', error);
+    console.error('❌ Error saving question:', error);
+    showToast('خطأ في حفظ السؤال!', true);
   }
 }
 

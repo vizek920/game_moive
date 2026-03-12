@@ -2206,10 +2206,10 @@ function handleVideoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   
-  // Check file size (max 10MB recommended)
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  // Check file size (max 15MB recommended)
+  const maxSize = 15 * 1024 * 1024; // 15MB
   if (file.size > maxSize) {
-    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 10MB', true);
+    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 15MB', true);
     return;
   }
   
@@ -2469,9 +2469,9 @@ async function handleAdminVideoUpload(event, ci, li) {
   if (!file) return;
   
   // Check file size
-  const maxSize = 10 * 1024 * 1024; // 10MB
+  const maxSize = 15 * 1024 * 1024; // 15MB
   if (file.size > maxSize) {
-    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 10MB', true);
+    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 15MB', true);
     return;
   }
   

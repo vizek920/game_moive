@@ -1483,63 +1483,13 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 // ==============================
-// CLOUDFLARE R2 CONFIGURATION
-// ==============================
-const R2_CONFIG = {
-  accountId: '2e9325081fb332fc6e2cd744e54555fe',
-  accessKeyId: 'b8cd48b70305cf275fd4afe30f0c6c88',
-  secretAccessKey: '1f7a56e9ac71eeb417ebe2e2b0098c9251a008973c947c6f4663bce598a01615',
-  bucketName: 'vizek',
-  publicUrl: 'https://pub-70895216041d4bd0852674a57a60144d.r2.dev'
-};
-
-// Upload video to R2
-async function uploadVideoToR2(file, categoryId, levelId) {
-  try {
-    const fileName = `video-${categoryId}-${levelId}-${Date.now()}.${file.name.split('.').pop()}`;
-    
-    // Create FormData
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    // We'll use a simple approach: convert to base64 and store in Supabase for now
-    // For production R2 upload, you'd need a backend server
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const videoUrl = e.target.result;
-        resolve(videoUrl);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-    
-  } catch (error) {
-    console.error('Error uploading to R2:', error);
-    throw error;
-  }
-}
-
-// ==============================
 // SUPABASE CONFIGURATION
 // ==============================
-let sb; // Global Supabase client
+const SUPABASE_URL = 'https://cpktqamgrcrhqohyguar.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa3RxYW1ncmNyaHFvaHlndWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTQxMTMsImV4cCI6MjA4ODgzMDExM30.BHdxCiVIO6NS5VcsRUdm_rEijvbsAigYX7rChZHJ8ZA';
 
-window.addEventListener('DOMContentLoaded', function() {
-  const SUPABASE_URL = 'https://cpktqamgrcrhqohyguar.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwa3RxYW1ncmNyaHFvaHlndWFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNTQxMTMsImV4cCI6MjA4ODgzMDExM30.BHdxCiVIO6NS5VcsRUdm_rEijvbsAigYX7rChZHJ8ZA';
-  
-  if (window.supabase && window.supabase.createClient) {
-    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase connected successfully!');
-    
-    // Initialize app after Supabase is ready
-    initializeApp();
-  } else {
-    console.error('❌ Supabase library not loaded');
-    alert('خطأ في تحميل قاعدة البيانات. يرجى تحديث الصفحة.');
-  }
-});
+const { createClient } = window.supabase;
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ==============================
 // STATE
@@ -1628,7 +1578,7 @@ const state = {
 // Load game state from Supabase
 async function loadGameState() {
   try {
-    const { data, error } = await sb
+    const { data, error } = await supabase
       .from('game_state')
       .select('*')
       .limit(1)
@@ -1650,7 +1600,7 @@ async function loadGameState() {
 // Save game state to Supabase
 async function saveGameState() {
   try {
-    const { error } = await sb
+    const { error } = await supabase
       .from('game_state')
       .update({
         helal_score: state.scores.helal,
@@ -1670,7 +1620,7 @@ async function saveGameState() {
 // Load category points from Supabase
 async function loadCategoryPoints() {
   try {
-    const { data, error } = await sb
+    const { data, error } = await supabase
       .from('category_points')
       .select('*')
       .order('id');
@@ -1690,7 +1640,7 @@ async function loadCategoryPoints() {
 // Save category points to Supabase
 async function saveCategoryPoint(catId, points) {
   try {
-    const { error } = await sb
+    const { error } = await supabase
       .from('category_points')
       .update({ points: points })
       .eq('id', catId);
@@ -1704,7 +1654,7 @@ async function saveCategoryPoint(catId, points) {
 // Load questions from Supabase
 async function loadQuestions() {
   try {
-    const { data, error } = await sb
+    const { data, error } = await supabase
       .from('questions')
       .select('*')
       .order('category_id')
@@ -1732,7 +1682,7 @@ async function loadQuestions() {
 async function saveQuestionToSupabase(catId, levelId) {
   const q = state.questions[catId][levelId];
   try {
-    const { error } = await sb
+    const { error } = await supabase
       .from('questions')
       .update({
         option_a: q.options[0],
@@ -1744,21 +1694,16 @@ async function saveQuestionToSupabase(catId, levelId) {
       .eq('category_id', catId)
       .eq('level_id', levelId);
     
-    if (error) {
-      console.error('❌ Error saving question:', error);
-      throw error;
-    }
-    console.log('✅ Question saved successfully!');
+    if (error) throw error;
   } catch (error) {
-    console.error('❌ Error saving question:', error);
-    showToast('خطأ في حفظ السؤال!', true);
+    console.error('Error saving question:', error);
   }
 }
 
 // Load completed levels from Supabase
 async function loadCompletedLevels() {
   try {
-    const { data, error } = await sb
+    const { data, error } = await supabase
       .from('completed_levels')
       .select('*');
     
@@ -1780,7 +1725,7 @@ async function loadCompletedLevels() {
 // Mark level as completed in Supabase
 async function markLevelCompleteSupabase(catId, levelId) {
   try {
-    const { error } = await sb
+    const { error } = await supabase
       .from('completed_levels')
       .insert([{ category_id: catId, level_id: levelId }]);
     
@@ -1793,7 +1738,7 @@ async function markLevelCompleteSupabase(catId, levelId) {
 // Subscribe to real-time updates
 function subscribeToRealtimeUpdates() {
   // Subscribe to game_state changes
-  sb
+  supabase
     .channel('game_state_changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'game_state' }, payload => {
       if (payload.new) {
@@ -1807,7 +1752,7 @@ function subscribeToRealtimeUpdates() {
     .subscribe();
 
   // Subscribe to category_points changes
-  sb
+  supabase
     .channel('category_points_changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'category_points' }, payload => {
       if (payload.new) {
@@ -1818,7 +1763,7 @@ function subscribeToRealtimeUpdates() {
     .subscribe();
 
   // Subscribe to questions changes
-  sb
+  supabase
     .channel('questions_changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, async () => {
       await loadQuestions();
@@ -1826,7 +1771,7 @@ function subscribeToRealtimeUpdates() {
     .subscribe();
 
   // Subscribe to completed_levels changes
-  sb
+  supabase
     .channel('completed_levels_changes')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'completed_levels' }, async () => {
       await loadCompletedLevels();
@@ -1847,14 +1792,14 @@ function saveState() {
 }
 
 // Init - Load data from Supabase and subscribe to real-time updates
-async function initializeApp() {
+(async function init() {
   await loadGameState();
   await loadCategoryPoints();
   await loadQuestions();
   await loadCompletedLevels();
   updateScoreDisplay();
   subscribeToRealtimeUpdates();
-}
+})();
 // NAVIGATION
 // ==============================
 function showPage(id) {
@@ -2206,40 +2151,18 @@ function handleVideoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   
-  // Check file size (max 15MB recommended)
-  const maxSize = 15 * 1024 * 1024; // 15MB
-  if (file.size > maxSize) {
-    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 15MB', true);
-    return;
-  }
-  
-  showToast('جاري رفع الفيديو... ⏳');
-  
   // Convert to base64 for persistent storage
   const reader = new FileReader();
   reader.onload = async function(e) {
-    try {
-      const base64Video = e.target.result;
-      state.questions[state.currentCat][state.currentLevel].video = base64Video;
-      state.questions[state.currentCat][state.currentLevel].videoFile = file.name;
-      
-      const wrapper = document.getElementById('videoWrapper');
-      // Add type attribute to help browser recognize video format
-      const fileType = file.type || 'video/mp4';
-      wrapper.innerHTML = `<video controls style="width:100%; border-radius:14px;">
-        <source src="${base64Video}" type="${fileType}">
-        متصفحك لا يدعم عرض الفيديو
-      </video>`;
-      
-      await saveQuestionToSupabase(state.currentCat, state.currentLevel); // Save to Supabase
-      showToast('تم حفظ الفيديو بنجاح! 🎥');
-    } catch (error) {
-      console.error('Error uploading video:', error);
-      showToast('❌ فشل رفع الفيديو! جرب فيديو أصغر', true);
-    }
-  };
-  reader.onerror = function() {
-    showToast('❌ خطأ في قراءة الفيديو!', true);
+    const base64Video = e.target.result;
+    state.questions[state.currentCat][state.currentLevel].video = base64Video;
+    state.questions[state.currentCat][state.currentLevel].videoFile = file.name;
+    
+    const wrapper = document.getElementById('videoWrapper');
+    wrapper.innerHTML = `<video src="${base64Video}" controls style="width:100%; border-radius:14px;"></video>`;
+    
+    await saveQuestionToSupabase(state.currentCat, state.currentLevel); // Save to Supabase
+    showToast('تم حفظ الفيديو بنجاح! 🎥');
   };
   reader.readAsDataURL(file);
 }
@@ -2354,12 +2277,12 @@ async function resetAll() {
   await saveGameState();
   
   // Clear completed levels
-  await sb.from('completed_levels').delete().neq('id', 0);
+  await supabase.from('completed_levels').delete().neq('id', 0);
   
   // Reset questions in database
   for (let cat = 0; cat < 4; cat++) {
     for (let lvl = 0; lvl < 10; lvl++) {
-      await sb
+      await supabase
         .from('questions')
         .update({
           option_a: 'خيار أ',
@@ -2468,35 +2391,18 @@ async function handleAdminVideoUpload(event, ci, li) {
   const file = event.target.files[0];
   if (!file) return;
   
-  // Check file size
-  const maxSize = 15 * 1024 * 1024; // 15MB
-  if (file.size > maxSize) {
-    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 15MB', true);
-    return;
-  }
-  
-  showToast('جاري رفع الفيديو... ⏳');
-  
   // Convert file to base64 for persistent storage
   const reader = new FileReader();
   reader.onload = async function(e) {
-    try {
-      const base64Video = e.target.result;
-      state.questions[ci][li].video = base64Video;
-      state.questions[ci][li].videoFile = file.name;
-      
-      await saveQuestionToSupabase(ci, li); // Save to Supabase
-      showToast(`🎥 تم حفظ الفيديو للمرحلة ${li+1}!`);
-      
-      // Re-render to update the UI
-      setTimeout(() => renderQuestionsEditor(), 300);
-    } catch (error) {
-      console.error('Error uploading video:', error);
-      showToast('❌ فشل رفع الفيديو! جرب فيديو أصغر', true);
-    }
-  };
-  reader.onerror = function() {
-    showToast('❌ خطأ في قراءة الفيديو!', true);
+    const base64Video = e.target.result;
+    state.questions[ci][li].video = base64Video;
+    state.questions[ci][li].videoFile = file.name;
+    
+    await saveQuestionToSupabase(ci, li); // Save to Supabase
+    showToast(`🎥 تم حفظ الفيديو للمرحلة ${li+1}!`);
+    
+    // Re-render to update the UI
+    setTimeout(() => renderQuestionsEditor(), 300);
   };
   reader.readAsDataURL(file);
 }

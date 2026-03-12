@@ -2206,18 +2206,40 @@ function handleVideoUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   
+  // Check file size (max 10MB recommended)
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 10MB', true);
+    return;
+  }
+  
+  showToast('جاري رفع الفيديو... ⏳');
+  
   // Convert to base64 for persistent storage
   const reader = new FileReader();
   reader.onload = async function(e) {
-    const base64Video = e.target.result;
-    state.questions[state.currentCat][state.currentLevel].video = base64Video;
-    state.questions[state.currentCat][state.currentLevel].videoFile = file.name;
-    
-    const wrapper = document.getElementById('videoWrapper');
-    wrapper.innerHTML = `<video src="${base64Video}" controls style="width:100%; border-radius:14px;"></video>`;
-    
-    await saveQuestionToSupabase(state.currentCat, state.currentLevel); // Save to Supabase
-    showToast('تم حفظ الفيديو بنجاح! 🎥');
+    try {
+      const base64Video = e.target.result;
+      state.questions[state.currentCat][state.currentLevel].video = base64Video;
+      state.questions[state.currentCat][state.currentLevel].videoFile = file.name;
+      
+      const wrapper = document.getElementById('videoWrapper');
+      // Add type attribute to help browser recognize video format
+      const fileType = file.type || 'video/mp4';
+      wrapper.innerHTML = `<video controls style="width:100%; border-radius:14px;">
+        <source src="${base64Video}" type="${fileType}">
+        متصفحك لا يدعم عرض الفيديو
+      </video>`;
+      
+      await saveQuestionToSupabase(state.currentCat, state.currentLevel); // Save to Supabase
+      showToast('تم حفظ الفيديو بنجاح! 🎥');
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      showToast('❌ فشل رفع الفيديو! جرب فيديو أصغر', true);
+    }
+  };
+  reader.onerror = function() {
+    showToast('❌ خطأ في قراءة الفيديو!', true);
   };
   reader.readAsDataURL(file);
 }
@@ -2446,18 +2468,35 @@ async function handleAdminVideoUpload(event, ci, li) {
   const file = event.target.files[0];
   if (!file) return;
   
+  // Check file size
+  const maxSize = 10 * 1024 * 1024; // 10MB
+  if (file.size > maxSize) {
+    showToast('⚠️ الفيديو كبير جداً! يجب أن يكون أقل من 10MB', true);
+    return;
+  }
+  
+  showToast('جاري رفع الفيديو... ⏳');
+  
   // Convert file to base64 for persistent storage
   const reader = new FileReader();
   reader.onload = async function(e) {
-    const base64Video = e.target.result;
-    state.questions[ci][li].video = base64Video;
-    state.questions[ci][li].videoFile = file.name;
-    
-    await saveQuestionToSupabase(ci, li); // Save to Supabase
-    showToast(`🎥 تم حفظ الفيديو للمرحلة ${li+1}!`);
-    
-    // Re-render to update the UI
-    setTimeout(() => renderQuestionsEditor(), 300);
+    try {
+      const base64Video = e.target.result;
+      state.questions[ci][li].video = base64Video;
+      state.questions[ci][li].videoFile = file.name;
+      
+      await saveQuestionToSupabase(ci, li); // Save to Supabase
+      showToast(`🎥 تم حفظ الفيديو للمرحلة ${li+1}!`);
+      
+      // Re-render to update the UI
+      setTimeout(() => renderQuestionsEditor(), 300);
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      showToast('❌ فشل رفع الفيديو! جرب فيديو أصغر', true);
+    }
+  };
+  reader.onerror = function() {
+    showToast('❌ خطأ في قراءة الفيديو!', true);
   };
   reader.readAsDataURL(file);
 }
